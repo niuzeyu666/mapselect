@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="无畏契约自定义房间随机地图选择器">
+    <meta name="description" content="无畏契约自定义房间随机地图选择器和 VCT Ban/Pick 模拟器">
     <title>无畏契约随机地图选择器</title>
     <link rel="stylesheet" href="styles.css">
   </head>
@@ -42,6 +42,58 @@
           <ol id="history-list" class="history-list"></ol>
         </aside>
       </section>
+
+      <section class="vct-panel" aria-labelledby="vct-title">
+        <div class="section-heading">
+          <p class="kicker">VCT Veto Simulator</p>
+          <h2 id="vct-title">模拟比赛 Ban/Pick</h2>
+        </div>
+
+        <div class="vct-grid">
+          <form class="vct-controls" id="vct-form">
+            <label>
+              <span>左侧战队</span>
+              <input id="team-left" type="text" value="Team Alpha" maxlength="24">
+            </label>
+            <label>
+              <span>右侧战队</span>
+              <input id="team-right" type="text" value="Team Bravo" maxlength="24">
+            </label>
+            <label>
+              <span>赛制</span>
+              <select id="match-format">
+                <option value="bo3">Bo3</option>
+                <option value="bo1">Bo1</option>
+                <option value="bo5">Bo5</option>
+              </select>
+            </label>
+            <label>
+              <span>Team A 归属</span>
+              <select id="team-a-owner">
+                <option value="random">随机决定</option>
+                <option value="left">左侧战队</option>
+                <option value="right">右侧战队</option>
+              </select>
+            </label>
+            <button class="pick-button vct-button" type="submit">
+              <span class="button-mark" aria-hidden="true"></span>
+              <span>模拟 Ban/Pick</span>
+            </button>
+          </form>
+
+          <div class="vct-output" aria-live="polite">
+            <div class="team-assignment" id="team-assignment"></div>
+            <div class="map-pool" id="vct-map-pool"></div>
+            <div class="series-list" id="series-list"></div>
+            <ol class="veto-list" id="veto-list"></ol>
+          </div>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        本网站是非官方粉丝项目，未获得 Riot Games、VALORANT 或 VCT 官方认可、赞助或授权。Riot Games、VALORANT 及相关地图图片资产归 Riot Games, Inc. 所有。
+      </footer>
+
       <p id="result-announcer" class="sr-only" aria-live="assertive"></p>
     </main>
 

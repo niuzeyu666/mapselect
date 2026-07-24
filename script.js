@@ -92,6 +92,10 @@ const maps = [
   }
 ];
 
+const vctPoolSlugs = ["summit", "sunset", "breeze", "haven", "lotus", "split", "ascent"];
+const vctPool = vctPoolSlugs.map((slug) => maps.find((map) => map.slug === slug));
+const sides = ["进攻方", "防守方"];
+
 const mapImage = document.querySelector("#map-image");
 const mapName = document.querySelector("#map-name");
 const pickButton = document.querySelector("#pick-button");
@@ -99,6 +103,16 @@ const historyList = document.querySelector("#history-list");
 const poolCount = document.querySelector("#pool-count");
 const announcer = document.querySelector("#result-announcer");
 const mapStage = document.querySelector(".map-stage");
+const vctForm = document.querySelector("#vct-form");
+const teamLeftInput = document.querySelector("#team-left");
+const teamRightInput = document.querySelector("#team-right");
+const matchFormatSelect = document.querySelector("#match-format");
+const teamAOwnerSelect = document.querySelector("#team-a-owner");
+const teamAssignment = document.querySelector("#team-assignment");
+const vctMapPool = document.querySelector("#vct-map-pool");
+const seriesList = document.querySelector("#series-list");
+const vetoList = document.querySelector("#veto-list");
+const vctButton = document.querySelector(".vct-button");
 
 let currentMap = null;
 let history = [];
@@ -111,6 +125,16 @@ function pickRandomMap() {
   const availableMaps = maps.filter((map) => map.slug !== currentMap?.slug);
   const index = Math.floor(Math.random() * availableMaps.length);
   return availableMaps[index];
+}
+
+function takeRandomMap(pool) {
+  const index = Math.floor(Math.random() * pool.length);
+  const [map] = pool.splice(index, 1);
+  return map;
+}
+
+function pickRandomSide() {
+  return sides[Math.floor(Math.random() * sides.length)];
 }
 
 function renderHistory() {
@@ -170,13 +194,228 @@ function rollMap() {
   }, 360);
 }
 
+function getTeamSetup() {
+  const leftName = teamLeftInput.value.trim() || "Team Alpha";
+  const rightName = teamRightInput.value.trim() || "Team Bravo";
+  const owner = teamAOwnerSelect.value === "random"
+    ? (Math.random() < 0.5 ? "left" : "right")
+    : teamAOwnerSelect.value;
+
+  const leftTeam = { id: "left", name: leftName, color: "#ff4655" };
+  const rightTeam = { id: "right", name: rightName, color: "#22d3b6" };
+  const teamA = owner === "left" ? leftTeam : rightTeam;
+  const teamB = owner === "left" ? rightTeam : leftTeam;
+
+  return {
+    A: teamA,
+    B: teamB,
+    left: leftTeam,
+    right: rightTeam
+  };
+}
+
+function getVctSteps(format) {
+  const flows = {
+    bo1: [
+      { kind: "ban", actor: "A" },
+      { kind: "ban", actor: "B" },
+      { kind: "ban", actor: "A" },
+      { kind: "ban", actor: "B" },
+      { kind: "ban", actor: "A" },
+      { kind: "ban", actor: "B" },
+      { kind: "decider", mapNumber: 1, sideActor: "A" }
+    ],
+    bo3: [
+      { kind: "ban", actor: "A" },
+      { kind: "ban", actor: "B" },
+      { kind: "pick", actor: "A", mapNumber: 1, sideActor: "B" },
+      { kind: "pick", actor: "B", mapNumber: 2, sideActor: "A" },
+      { kind: "ban", actor: "A" },
+      { kind: "ban", actor: "B" },
+      { kind: "decider", mapNumber: 3, sideActor: "A" }
+    ],
+    bo5: [
+      { kind: "ban", actor: "A" },
+      { kind: "ban", actor: "B" },
+      { kind: "pick", actor: "A", mapNumber: 1, sideActor: "B" },
+      { kind: "pick", actor: "B", mapNumber: 2, sideActor: "A" },
+      { kind: "pick", actor: "A", mapNumber: 3, sideActor: "B" },
+      { kind: "pick", actor: "B", mapNumber: 4, sideActor: "A" },
+      { kind: "decider", mapNumber: 5, sideActor: "B" }
+    ]
+  };
+
+  return flows[format] || flows.bo3;
+}
+
+function simulateVctVeto(format, teams) {
+  const remaining = [...vctPool];
+  const timeline = [];
+  const seriesMaps = [];
+
+  getVctSteps(format).forEach((step) => {
+    if (step.kind === "ban") {
+      const map = takeRandomMap(remaining);
+      timeline.push({
+        type: "BAN",
+        actor: teams[step.actor],
+        map,
+        detail: `${teams[step.actor].name} 禁用 ${map.name}`
+      });
+      return;
+    }
+
+    if (step.kind === "pick") {
+      const map = takeRandomMap(remaining);
+      const side = pickRandomSide();
+      const sideTeam = teams[step.sideActor];
+      const result = {
+        mapNumber: step.mapNumber,
+        map,
+        pickedBy: teams[step.actor],
+        sideTeam,
+        side
+      };
+      seriesMaps.push(result);
+      timeline.push({
+        type: "PICK",
+        actor: teams[step.actor],
+        map,
+        detail: `${teams[step.actor].name} 选择地图 ${step.mapNumber}，${sideTeam.name} 选择${side}`
+      });
+      return;
+    }
+
+    const map = remaining[0];
+    const side = pickRandomSide();
+    const sideTeam = teams[step.sideActor];
+    const result = {
+      mapNumber: step.mapNumber,
+      map,
+      pickedBy: null,
+      sideTeam,
+      side
+    };
+    seriesMaps.push(result);
+    timeline.push({
+      type: "DECIDER",
+      actor: sideTeam,
+      map,
+      detail: `剩余地图成为地图 ${step.mapNumber}，${sideTeam.name} 选择${side}`
+    });
+  });
+
+  seriesMaps.sort((a, b) => a.mapNumber - b.mapNumber);
+  return { timeline, seriesMaps };
+}
+
+function renderVctPool() {
+  vctMapPool.innerHTML = "";
+
+  vctPool.forEach((map) => {
+    const chip = document.createElement("span");
+    chip.className = "pool-chip";
+    chip.style.setProperty("--chip-color", map.themeColor);
+    chip.textContent = map.name;
+    vctMapPool.append(chip);
+  });
+}
+
+function renderTeamAssignment(teams) {
+  teamAssignment.innerHTML = "";
+
+  ["A", "B"].forEach((role) => {
+    const team = teams[role];
+    const pill = document.createElement("div");
+    pill.className = "team-pill";
+    pill.style.setProperty("--pill-color", team.color);
+
+    const label = document.createElement("span");
+    label.textContent = `Team ${role}`;
+
+    const name = document.createElement("strong");
+    name.textContent = team.name;
+
+    pill.append(label, name);
+    teamAssignment.append(pill);
+  });
+}
+
+function renderSeries(seriesMaps) {
+  seriesList.innerHTML = "";
+
+  seriesMaps.forEach((result) => {
+    const card = document.createElement("article");
+    card.className = "series-card";
+    card.style.setProperty("--card-image", `url("${result.map.localImage}")`);
+
+    const label = document.createElement("span");
+    label.textContent = `地图 ${result.mapNumber}`;
+
+    const name = document.createElement("strong");
+    name.textContent = result.map.name;
+
+    const meta = document.createElement("em");
+    meta.textContent = `${result.sideTeam.name} 选${result.side}`;
+
+    card.append(label, name, meta);
+    seriesList.append(card);
+  });
+}
+
+function renderTimeline(timeline) {
+  vetoList.innerHTML = "";
+
+  timeline.forEach((step, index) => {
+    const item = document.createElement("li");
+    item.style.setProperty("--step-color", step.map.themeColor);
+
+    const label = document.createElement("span");
+    label.textContent = `${String(index + 1).padStart(2, "0")} · ${step.type}`;
+
+    const title = document.createElement("strong");
+    title.textContent = `${step.map.name}`;
+
+    const meta = document.createElement("div");
+    meta.className = "step-meta";
+    meta.textContent = step.detail;
+
+    item.append(label, title, meta);
+    vetoList.append(item);
+  });
+}
+
+function runVctSimulation() {
+  const teams = getTeamSetup();
+  const format = matchFormatSelect.value;
+  const result = simulateVctVeto(format, teams);
+
+  renderTeamAssignment(teams);
+  renderSeries(result.seriesMaps);
+  renderTimeline(result.timeline);
+  announcer.textContent = `已生成 ${format.toUpperCase()} Ban/Pick，第一张地图是 ${result.seriesMaps[0].map.name}`;
+}
+
 poolCount.textContent = maps.length.toString();
 pickButton.addEventListener("click", rollMap);
+vctForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  vctButton.classList.add("is-rolling");
+  window.setTimeout(() => {
+    runVctSimulation();
+    vctButton.classList.remove("is-rolling");
+  }, 220);
+});
+
+renderVctPool();
 showMap(pickRandomMap());
+runVctSimulation();
 
 window.mapSelector = {
   maps,
+  vctPool,
   pickRandomMap,
+  simulateVctVeto,
   get currentMap() {
     return currentMap;
   }
