@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="无畏契约自定义房间随机地图选择器">
+    <title>无畏契约随机地图选择器</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="picker" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="kicker">VALORANT Custom</p>
+          <h1 id="page-title">今晚打哪张图？</h1>
+        </div>
+
+        <div class="result-panel" aria-live="polite">
+          <div class="map-stage">
+            <img id="map-image" src="" alt="" width="1920" height="1080">
+            <div class="image-shade"></div>
+            <div class="map-label">
+              <span class="label-caption">随机结果</span>
+              <strong id="map-name">准备中</strong>
+            </div>
+          </div>
+
+          <div class="control-row">
+            <button id="pick-button" class="pick-button" type="button">
+              <span class="button-mark" aria-hidden="true"></span>
+              <span>随机地图</span>
+            </button>
+            <div class="pool-count">
+              <span id="pool-count">13</span>
+              <span>张标准地图</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="history-panel" aria-labelledby="history-title">
+          <h2 id="history-title">最近结果</h2>
+          <ol id="history-list" class="history-list"></ol>
+        </aside>
+      </section>
+      <p id="result-announcer" class="sr-only" aria-live="assertive"></p>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
