@@ -77,12 +77,15 @@
             </label>
             <button class="pick-button vct-button" type="submit">
               <span class="button-mark" aria-hidden="true"></span>
-              <span>模拟 Ban/Pick</span>
+              <span>开始 Ban/Pick</span>
             </button>
+            <button class="secondary-button" id="reset-vct-button" type="button">重开流程</button>
           </form>
 
           <div class="vct-output" aria-live="polite">
             <div class="team-assignment" id="team-assignment"></div>
+            <div class="active-step" id="active-step"></div>
+            <div class="side-picker" id="side-picker"></div>
             <div class="map-pool" id="vct-map-pool"></div>
             <div class="series-list" id="series-list"></div>
             <ol class="veto-list" id="veto-list"></ol>

@@ -203,12 +203,28 @@ h2 {
   transition: transform 160ms ease, filter 160ms ease;
 }
 
+.secondary-button {
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 16px;
+  color: var(--text);
+  background: var(--field);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.secondary-button:hover {
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
 .pick-button:hover {
   filter: brightness(1.08);
   transform: translateY(-1px);
 }
 
 .pick-button:focus-visible,
+.secondary-button:focus-visible,
 input:focus-visible,
 select:focus-visible {
   outline: 3px solid rgba(34, 211, 182, 0.85);
@@ -367,6 +383,7 @@ select:focus-visible {
 }
 
 .team-pill strong,
+.active-card strong,
 .series-card strong,
 .veto-list strong {
   display: block;
@@ -375,10 +392,65 @@ select:focus-visible {
   overflow-wrap: anywhere;
 }
 
+.active-card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.active-card.is-side {
+  border-left-color: var(--gold);
+}
+
+.active-card.is-complete {
+  border-left-color: var(--accent-2);
+}
+
+.active-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.active-card strong {
+  font-size: 1.22rem;
+}
+
+.active-card p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.side-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.side-choice {
+  min-height: 54px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  background: rgba(242, 196, 107, 0.14);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.side-choice:hover {
+  border-color: rgba(242, 196, 107, 0.72);
+}
+
 .map-pool {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(92px, 1fr));
+  gap: 10px;
 }
 
 .pool-chip {
@@ -398,6 +470,88 @@ select:focus-visible {
   height: 8px;
   border-radius: 50%;
   background: var(--chip-color, var(--accent-2));
+}
+
+.map-choice {
+  position: relative;
+  min-height: 90px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--chip-color, var(--accent-2));
+  border-radius: 8px;
+  overflow: hidden;
+  display: grid;
+  align-content: end;
+  justify-items: start;
+  gap: 3px;
+  padding: 11px;
+  color: var(--text);
+  background:
+    linear-gradient(0deg, rgba(8, 10, 15, 0.82), rgba(8, 10, 15, 0.34)),
+    var(--map-thumb) center / cover;
+  cursor: pointer;
+  text-align: left;
+}
+
+.map-choice strong,
+.map-choice span {
+  position: relative;
+  z-index: 1;
+}
+
+.map-choice strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.map-choice span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.map-choice:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.48);
+  transform: translateY(-1px);
+}
+
+.map-choice:disabled {
+  cursor: not-allowed;
+  filter: saturate(0.55);
+}
+
+.map-choice.is-ban,
+.map-choice.is-pick,
+.map-choice.is-decider {
+  opacity: 0.66;
+}
+
+.map-choice.is-ban::after,
+.map-choice.is-pick::after,
+.map-choice.is-decider::after,
+.map-choice.is-pending::after {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.18);
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.map-choice.is-ban::after {
+  content: "BAN";
+}
+
+.map-choice.is-pick::after {
+  content: "PICK";
+}
+
+.map-choice.is-decider::after {
+  content: "MAP";
+}
+
+.map-choice.is-pending::after {
+  content: "SIDE";
 }
 
 .series-list {
@@ -450,6 +604,16 @@ select:focus-visible {
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 700;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: 800;
 }
 
 .site-footer {
@@ -509,6 +673,10 @@ select:focus-visible {
     min-height: 0;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .map-pool {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 680px) {
@@ -532,6 +700,11 @@ select:focus-visible {
     min-width: 0;
     text-align: left;
   }
+
+  .map-pool,
+  .side-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 520px) {
@@ -552,6 +725,10 @@ select:focus-visible {
   }
 
   .history-list {
+    grid-template-columns: 1fr;
+  }
+
+  .map-pool {
     grid-template-columns: 1fr;
   }
 }
